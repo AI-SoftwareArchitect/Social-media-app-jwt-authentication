@@ -1,0 +1,36 @@
+services:
+  authentication_api:
+    build:
+      context: ../  # Solution dizinini bağlayarak tüm projeyi bağlamış oluyoruz
+      dockerfile: AuthenticationApiProject/Dockerfile  # API'nin Dockerfile'ı
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=authdb;Username=master;Password=1502
+    depends_on:
+      - postgres
+    networks:
+      - auth_network
+    entrypoint: ["sh", "-c", "dotnet AuthenticationApiProject.dll && dotnet ef database update"]  # Migration'ı çalıştırıyoruz ve sonra uygulamayı başlatıyoruz
+
+  postgres:
+    image: postgres:latest
+    container_name: auth_postgres
+    environment:
+      POSTGRES_USER: master
+      POSTGRES_PASSWORD: 1502
+      POSTGRES_DB: authdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - auth_network
+
+volumes:
+  postgres_data:
+
+networks:
+  auth_network:
+    driver: bridge
